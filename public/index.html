@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Service</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #6c757d;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+        }
+
+        .tab:hover { background: #e9ecef; }
+
+        .tab.active {
+            color: #667eea;
+            background: white;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content { display: none; padding: 20px; }
+        .tab-content.active { display: block; }
+
+        .add-client-form { max-width: 500px; margin: 0 auto; }
+
+        .form-group { margin-bottom: 15px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .clients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .client-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .client-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .client-card.selected {
+            border-color: #667eea;
+            background: #e7e9fc;
+        }
+
+        .client-card h3 {
+            color: #495057;
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+            padding-right: 35px;
+        }
+
+        .client-card .photo-count {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .client-card .delete-client-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 2px solid #dc3545;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .client-card .delete-client-btn:hover {
+            background: #dc3545;
+            color: white;
+            transform: scale(1.15);
+        }
+
+        .photo-manager { max-width: 700px; margin: 0 auto; }
+
+        .selected-client-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .selected-client-info h2 {
+            font-size: 1.3rem;
+            margin-bottom: 3px;
+        }
+
+        .selected-client-info p {
+            font-size: 0.9rem;
+        }
+
+        .selected-client-info .delete-selected-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .selected-client-info .delete-selected-btn:hover {
+            background: rgba(220, 53, 69, 0.9);
+            border-color: rgba(220, 53, 69, 0.9);
+            transform: scale(1.05);
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background: #f8f9fa;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e7e9fc;
+            border-color: #764ba2;
+        }
+
+        .upload-area input[type="file"] { display: none; }
+
+        .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+
+        .upload-area h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .upload-area p {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .photo-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-item .photo-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            color: white;
+            padding: 10px 8px 6px;
+            font-size: 0.75rem;
+        }
+
+        .photo-item .delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .photo-item .delete-btn:hover {
+            background: #dc3545;
+            transform: scale(1.1);
+        }
+
+        .alert {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+            font-size: 1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to   { transform: translateY(0);       opacity: 1; }
+        }
+
+        .modal-content h3 {
+            color: #495057;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+        }
+
+        .modal-content p {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions button { flex: 1; }
+
+        h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #495057;
+        }
+
+        .section-divider {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header h1 { font-size: 1.5rem; }
+            .header p { font-size: 0.85rem; }
+            .tabs { flex-direction: column; }
+            .tab { padding: 10px; }
+            .tab-content { padding: 15px; }
+            .clients-grid { grid-template-columns: 1fr; }
+            .photos-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+            .photo-item img { height: 120px; }
+            .selected-client-info .delete-selected-btn {
+                position: static;
+                margin-top: 10px;
+                display: inline-block;
+            }
+            .upload-area { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Photo Service</h1>
+            <p>Управление клиентами и фотографиями</p>
+        </div>
+
+        <div class="main-card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('add')">➕ Добавить клиента</button>
+                <button class="tab" onclick="switchTab('manage')">📋 Управление фото</button>
+            </div>
+
+            <!-- Вкладка: Добавить клиента -->
+            <div id="tab-add" class="tab-content active">
+                <div class="add-client-form">
+                    <h2 style="text-align: center;">Создать нового клиента</h2>
+
+                    <div id="add-alert"></div>
+
+                    <form onsubmit="addClient(event)">
+                        <div class="form-group">
+                            <label for="clientName">Имя клиента (ФИО)</label>
+                            <input 
+                                type="text" 
+                                id="clientName" 
+                                placeholder="Имя такое же, как и при создании архива (ZIP) в ТГ"
+                                required
+                                autocomplete="off"
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <span>✨</span>
+                            <span>Добавить клиента</span>
+                        </button>
+                    </form>
+
+                    <div class="section-divider">
+                        <h3>Список клиентов</h3>
+                        <div id="clients-list-add" class="loading">Загрузка...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка: Управление фото -->
+            <div id="tab-manage" class="tab-content">
+                <div class="photo-manager">
+                    <div id="manage-alert"></div>
+
+                    <div id="client-selector">
+                        <h2 style="text-align: center;">Выберите клиента</h2>
+                        <div id="clients-grid" class="clients-grid loading">Загрузка...</div>
+                    </div>
+
+                    <div id="photo-section" style="display: none;">
+                        <div class="selected-client-info">
+                            <h2 id="selected-client-name"></h2>
+                            <p id="selected-client-photos"></p>
+                            <button class="delete-selected-btn" onclick="deleteSelectedClient()">🗑️ Удалить</button>
+                        </div>
+
+                        <div class="upload-area" onclick="document.getElementById('photoInput').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple onchange="uploadPhotos(event)">
+                            <div class="upload-icon">📤</div>
+                            <h3>Загрузить фото</h3>
+                            <p>Нажмите или перетащите файлы</p>
+                            <p>Максимум 3 фото, до 200 КБ</p>
+                        </div>
+
+                        <div id="photos-container">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 10px;">
+                                <h3 style="margin: 0;">Загруженные фото</h3>
+                                <button id="saveChangesBtn" class="btn btn-primary" style="width: auto; padding-inline: 16px;" onclick="savePhotosChanges()">
+                                    💾 Сохранить изменения
+                                </button>
+                            </div>
+                            <div id="photos-grid" class="photos-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3>⚠️ Подтверждение удаления</h3>
+            <p id="deleteModalText"></p>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
+                <button class="btn" style="background: #6c757d; color: white;" onclick="closeDeleteModal()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // НАСТРОЙКИ - ЗАМЕНИТЕ НА ВАШ URL
+        const API_URL = 'https://photo-production-eb12.up.railway.app';
+
+        let selectedClient = null;
+        let deleteAction = null;
+        let hasUnsavedChanges = false; // есть ли несохранённые изменения по фото
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            if (tab === 'add') {
+                loadClientsForAddTab();
+            } else if (tab === 'manage') {
+                loadClientsForManageTab();
+            }
+        }
+
+        function showDeleteModal(text, onConfirm) {
+            document.getElementById('deleteModalText').textContent = text;
+            deleteAction = onConfirm;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            deleteAction = null;
+        }
+
+        function confirmDelete() {
+            if (deleteAction) deleteAction();
+            closeDeleteModal();
+        }
+
+        function showAlert(containerId, message, type = 'success') {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        async function addClient(event) {
+            event.preventDefault();
+            const name = document.getElementById('clientName').value.trim();
+
+            if (!name) {
+                showAlert('add-alert', 'Введите имя клиента', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/clients/ensure`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert('add-alert', `✅ Клиент "${data.client.name}" успешно добавлен!`, 'success');
+                    document.getElementById('clientName').value = '';
+                    loadClientsForAddTab();
+                } else {
+                    showAlert('add-alert', data.error || 'Ошибка при добавлении клиента', 'error');
+                }
+            } catch (error) {
+                showAlert('add-alert', 'Ошибка соединения с сервером', 'error');
+                console.error(error);
+            }
+        }
+
+        async function loadClientsForAddTab() {
+            const container = document.getElementById('clients-list-add');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/clients`);
+                const data = await response.json();
+
+                if (data.clients.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👥</div>
+                            <h3>Клиентов пока нет</h3>
+                            <p>Добавьте первого клиента выше</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = data.clients.map(client => `
+                    <div class="client-card" style="margin-bottom: 10px;">
+                        <button class="delete-client-btn" onclick="deleteClientFromList(event, '${client.key}', '${client.name}')" title="Удалить клиента">✕</button>
+                        <h3>${client.name}</h3>
+                        <span class="photo-count">📷 ${client.photoCount} фото</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-error">Ошибка загрузки клиентов</div>';
+                console.error(error);
+            }
+        }
+
+        function deleteClientFromList(event, clientKey, clientName) {
+            event.stopPropagation();
+            showDeleteModal(
+                `Вы уверены, что хотите удалить клиента "${clientName}"? Все его фото будут удалены безвозвратно.`,
+                async () => {
+                    try {
+                        const response = await fetch(`${API_URL}/api/clients/${clientKey}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            showAlert('add-alert', `✅ Клиент "${clientName}" удалён`, 'success');
+                            loadClientsForAddTab();
+                        } else {
+                            showAlert('add-alert', 'Ошибка удаления клиента', 'error');
+                        }
+                    } catch (error) {
+                        showAlert('add-alert', 'Ошибка соединения с сервером', 'error');
+                        console.error(error);
+                    }
+                }
+            );
+        }
+
+        async function loadClientsForManageTab() {
+            const container = document.getElementById('clients-grid');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/clients`);
+                const data = await response.json();
+
+                if (data.clients.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👥</div>
+                            <h3>Клиентов пока нет</h3>
+                            <p>Добавьте клиента на первой вкладке</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = data.clients.map(client => `
+                    <div class="client-card" onclick="selectClient('${client.key}', '${client.name}', ${client.photoCount})">
+                        <button class="delete-client-btn" onclick="deleteClientFromGrid(event, '${client.key}', '${client.name}')" title="Удалить клиента">✕</button>
+                        <h3>${client.name}</h3>
+                        <span class="photo-count">📷 ${client.photoCount} фото</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-error">Ошибка загрузки клиентов</div>';
+                console.error(error);
+            }
+        }
+
+        function deleteClientFromGrid(event, clientKey, clientName) {
+            event.stopPropagation();
+            showDeleteModal(
+                `Вы уверены, что хотите удалить клиента "${clientName}"? Все его фото будут удалены безвозвратно.`,
+                async () => {
+                    try {
+                        const response = await fetch(`${API_URL}/api/clients/${clientKey}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            showAlert('manage-alert', `✅ Клиент "${clientName}" удалён`, 'success');
+
+                            if (selectedClient && selectedClient.key === clientKey) {
+                                selectedClient = null;
+                                document.getElementById('photo-section').style.display = 'none';
+                            }
+
+                            loadClientsForManageTab();
+                        } else {
+                            showAlert('manage-alert', 'Ошибка удаления клиента', 'error');
+                        }
+                    } catch (error) {
+                        showAlert('manage-alert', 'Ошибка соединения с сервером', 'error');
+                        console.error(error);
+                    }
+                }
+            );
+        }
+
+        function deleteSelectedClient() {
+            if (!selectedClient) return;
+
+            showDeleteModal(
+                `Вы уверены, что хотите удалить клиента "${selectedClient.name}"? Все его фото будут удалены безвозвратно.`,
+                async () => {
+                    try {
+                        const response = await fetch(`${API_URL}/api/clients/${selectedClient.key}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            showAlert('manage-alert', `✅ Клиент "${selectedClient.name}" удалён`, 'success');
+                            selectedClient = null;
+                            document.getElementById('photo-section').style.display = 'none';
+                            loadClientsForManageTab();
+                        } else {
+                            showAlert('manage-alert', 'Ошибка удаления клиента', 'error');
+                        }
+                    } catch (error) {
+                        showAlert('manage-alert', 'Ошибка соединения с сервером', 'error');
+                        console.error(error);
+                    }
+                }
+            );
+        }
+
+        function updateSelectedClientStatus(photoCount) {
+            if (!selectedClient) return;
+            selectedClient.photoCount = photoCount;
+
+            const statusEl = document.getElementById('selected-client-photos');
+            if (!statusEl) return;
+
+            const baseText = `Загружено: ${photoCount} из 3 фото`;
+            if (hasUnsavedChanges) {
+                statusEl.textContent = `${baseText} (изменения не сохранены)`;
+                statusEl.style.color = '#ffc9c9'; // мягкий красный
+            } else {
+                statusEl.textContent = baseText;
+                statusEl.style.color = '#ffffff';
+            }
+        }
+
+        function selectClient(key, name, photoCount) {
+            selectedClient = { key, name, photoCount };
+
+            document.querySelectorAll('.client-card').forEach(card => card.classList.remove('selected'));
+            event.target.closest('.client-card').classList.add('selected');
+
+            document.getElementById('photo-section').style.display = 'block';
+            document.getElementById('selected-client-name').textContent = name;
+
+            hasUnsavedChanges = false;
+            updateSelectedClientStatus(photoCount);
+
+            loadClientPhotos(key);
+            document.getElementById('photo-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function loadClientPhotos(clientKey) {
+            const container = document.getElementById('photos-grid');
+            container.innerHTML = '<div class="loading">Загрузка фото...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/clients/${clientKey}/photos`);
+                const data = await response.json();
+
+                if (data.photos.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📷</div>
+                            <h3>Фото пока нет</h3>
+                            <p>Загрузите фото выше</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = data.photos.map(photo => `
+                    <div class="photo-item">
+                        <img src="${photo.url}" alt="Photo">
+                        <button class="delete-btn" onclick="deletePhoto('${clientKey}', '${photo.id}')" title="Удалить">✕</button>
+                        <div class="photo-info">
+                            <div>${(photo.size / 1024).toFixed(1)} КБ</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-error">Ошибка загрузки фото</div>';
+                console.error(error);
+            }
+        }
+
+        async function uploadPhotos(event) {
+            const files = event.target.files;
+            if (!files.length || !selectedClient) return;
+
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('photos', file);
+            }
+
+            try {
+                showAlert('manage-alert', '⏳ Загрузка фото...', 'info');
+
+                const response = await fetch(`${API_URL}/api/clients/${selectedClient.key}/photos`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert('manage-alert', `✅ Загружено ${data.added.length} фото!`, 'success');
+
+                    hasUnsavedChanges = true;
+                    const newCount = (selectedClient.photoCount || 0) + data.added.length;
+                    updateSelectedClientStatus(newCount);
+
+                    loadClientPhotos(selectedClient.key);
+                    loadClientsForManageTab();
+                } else {
+                    showAlert('manage-alert', data.error || 'Ошибка загрузки', 'error');
+                }
+            } catch (error) {
+                showAlert('manage-alert', 'Ошибка соединения с сервером', 'error');
+                console.error(error);
+            }
+
+            event.target.value = '';
+        }
+
+        async function deletePhoto(clientKey, photoId) {
+            showDeleteModal(
+                'Вы уверены, что хотите удалить это фото?',
+                async () => {
+                    try {
+                        const response = await fetch(`${API_URL}/api/clients/${clientKey}/photos/${photoId}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            showAlert('manage-alert', '✅ Фото удалено', 'success');
+
+                            hasUnsavedChanges = true;
+                            const newCount = Math.max((selectedClient?.photoCount || 1) - 1, 0);
+                            updateSelectedClientStatus(newCount);
+
+                            loadClientPhotos(clientKey);
+                            loadClientsForManageTab();
+                        } else {
+                            showAlert('manage-alert', 'Ошибка удаления фото', 'error');
+                        }
+                    } catch (error) {
+                        showAlert('manage-alert', 'Ошибка соединения с сервером', 'error');
+                        console.error(error);
+                    }
+                }
+            );
+        }
+
+        function savePhotosChanges() {
+            if (!selectedClient) return;
+
+            if (!hasUnsavedChanges) {
+                showAlert('manage-alert', 'Изменений нет, сохранять нечего', 'info');
+                return;
+            }
+
+            hasUnsavedChanges = false;
+            updateSelectedClientStatus(selectedClient.photoCount || 0);
+            showAlert('manage-alert', '✅ Изменения по фото сохранены', 'success');
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.target.closest('.upload-area').classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.target.closest('.upload-area').classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.target.closest('.upload-area').classList.remove('dragover');
+
+            const input = document.getElementById('photoInput');
+            input.files = event.dataTransfer.files;
+            uploadPhotos({ target: input });
+        }
+
+        loadClientsForAddTab();
+    </script>
+</body>
+</html>
